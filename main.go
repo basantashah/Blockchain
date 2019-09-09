@@ -36,4 +36,9 @@ func main() {
 	fbalance.SetString(balanceAt.String())
 	ethValue := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 	fmt.Println(ethValue)
+
+	pendingBalance, err := client.PendingBalanceAt(context.Background(), account)
+	fmt.Println(pendingBalance)
+	// calling CreateAccount from account
+	// To-Do
 }
