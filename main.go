@@ -1,57 +1,39 @@
 package main
 
 import (
-	"bytes"
-	"crypto/sha256"
+	"context"
 	"fmt"
+	"log"
+	"math"
+	"math/big"
+
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/ethclient"
 )
 
-type BlockChain struct {
-	blocks []*Block
-}
-
-type Block struct {
-	Hash     []byte
-	Data     []byte
-	PrevHash []byte
-}
-
-func (b *Block) DeriveHash() {
-	info := bytes.Join([][]byte{b.Data, b.PrevHash}, []byte{})
-	hash := sha256.Sum256(info)
-	b.Hash = hash[:]
-
-}
-func CreateBlock(data string, PrevHash []byte) *Block {
-	block := &Block{[]byte{}, []byte(data), PrevHash}
-	block.DeriveHash()
-	return block
-}
-
-func (chain *BlockChain) AddBlock(data string) {
-	prevBlock := chain.blocks[len(chain.blocks)-1]
-	new := CreateBlock(data, prevBlock.Hash)
-	chain.blocks = append(chain.blocks, new)
-}
-
-func Genesis() *Block {
-	return CreateBlock("Genesis", []byte{})
-}
-
-func InitBlockChain() *BlockChain {
-	return &BlockChain{[]*Block{Genesis()}}
-}
-
 func main() {
-	chain := InitBlockChain()
-	chain.AddBlock("First Block after Genesis")
-	chain.AddBlock("Second Block after Genesis")
-	chain.AddBlock("Third Block after Genesis")
-
-	for _, block := range chain.blocks {
-		fmt.Printf("previous Hash : %x\n", block.PrevHash)
-		fmt.Printf("Data in Block: %s\n", block.Hash)
-		fmt.Printf("Hash: %x\n", block.Hash)
+	client, err := ethclient.Dial("http://127.0.0.1:7545")
+	if err != nil {
+		log.Fatal(err)
 	}
 
+	//fmt.Println("yes we have a connection")
+	account := common.HexToAddress("0x3AD041BF00Bd3b806F5Bd4aB96F9dcF1f05ab4EC")
+	balance, err := client.BalanceAt(context.Background(), account, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(balance)
+
+	blockNumber := big.NewInt(0)
+	balanceAt, err := client.BalanceAt(context.Background(), account, blockNumber)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(balanceAt)
+
+	fbalance := new(big.Float)
+	fbalance.SetString(balanceAt.String())
+	ethValue := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
+	fmt.Println(ethValue)
 }
